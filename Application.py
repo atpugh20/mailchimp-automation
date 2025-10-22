@@ -5,14 +5,18 @@ class Application:
         print("Application built.")
 
     def Run(self):
-        self.GetMC()
+        self.TestRequest()
 
-    def GetMC(self):
+    def TestRequest(self):
         url = "https://pokeapi.co/api/v2/pokemon/"
+
+
+        print(f"Requesting from {url}")
         response = requests.get(url)
 
         if response.status_code == 200:
+            print(f"Data recieved from {url}\n") 
             data = response.json()
-            self.PrintDict(data)
+            print(data)
         else:
             print(f"Error: {response.status_code}")
