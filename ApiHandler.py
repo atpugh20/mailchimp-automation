@@ -1,32 +1,53 @@
 import requests
+import os
+
+from dotenv import load_dotenv
 
 class ApiHandler:
     def __init__(self):
         print("Building API Handler...")
+        load_dotenv()
+
+        self.XCD_KEY = os.getenv("XCD_KEY")
+        # self.XCD_URL = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&searchid&pageid&last_updated"
+        self.XCD_URL = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&last_updated"
 
         print("API Handler built.")
 
-    def PullFromXCD(self) -> None:
+    def MakeRequest(self):
         '''
-        * Pulls all users from the X-CD database, then places it into the DataContainer.
+        * Uses the requests package to make an API call to XCD's databases.
         '''
-        r = requests.get(self.xcd_url)
-        print(r.text)
+        print("Starting request to XCD...")
 
-    def PostToXCD():
-        '''
-        * Uses DataContainer to update X-CD's database.
-        '''
-        pass
+        with requests.Session() as s:
+            response = s.get(self.XCD_URL)
 
-    def PullFromMailchimp():
-        '''
-        * Pulls all users from the Mailchip database, then places it into DataContainer.
-        '''
-        pass
+        if response.status_code == 200:
+            print(f"Successfully retrieved data.")
+            data = response.json()
+            print(data)
 
-    def PostToMailchimp():
+        else:
+            print(f"Could not connect to database. Code: {response.status_code}")
+
+        
+
+
+    def TestRequest(self):
         '''
-        * Uses DataContainer to update Mailchimp's database.
+        * Runs a test request to PokeAPI to test the functionality
+        * of the requests package.
         '''
-        pass
+
+        url = "https://pokeapi.co/api/v2/pokemon/"
+
+        print(f"Requesting from {url}")
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            print(f"Data recieved from {url}\n") 
+            data = response.json()
+            print(data)
+        else:
+            print(f"Error: {response.status_code}")
