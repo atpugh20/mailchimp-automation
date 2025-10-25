@@ -10,7 +10,6 @@ class ApiHandler:
         load_dotenv()
 
         self.XCD_KEY = os.getenv("XCD_KEY")
-        # self.XCD_URL = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&searchid=7014196c-5672-11eb-a0e7-168c11ffeccb&pageid&last_updated"
         self.XCD_URL = f"https://api.xcdsystem.com/v2/ViewEventCalendar?apikey={self.XCD_KEY}"
 
         print("API Handler built.")
@@ -27,10 +26,7 @@ class ApiHandler:
         if response.status_code == 200:
             print(f"Successfully retrieved data.")
             data = response.text
-            data_dict = json.loads(data)
-
-            for item in data_dict:
-                print(item)
+            print(data)
 
         else:
             print(f"Could not connect to database. Code: {response.status_code}")
