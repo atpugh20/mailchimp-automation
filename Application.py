@@ -7,4 +7,4 @@ class Application:
         print("Application built.")
 
     def Run(self):
-        self.apiHander.MakeRequest()
+        self.apiHander.ExtractContacts(showStats=True)
