@@ -3,6 +3,9 @@ import os
 import json
 from datetime import datetime
 
+import mailchimp_marketing as MailchimpMarketing
+from mailchimp_marketing.api_client import ApiClientError
+
 from dotenv import load_dotenv
 
 class ApiHandler:
@@ -11,6 +14,9 @@ class ApiHandler:
         self.LastUpdated = "31-12-2024"
         self.XCD_KEY = os.getenv("XCD_KEY")
         self.XCD_URL = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&last_updated={self.LastUpdated}" 
+        self.MC_KEY = os.getenv("MC_KEY")
+        self.MC_SERVER = os.getenv("MC_SERVER") 
+        
         print("API Handler built.")
 
 
@@ -71,8 +77,46 @@ class ApiHandler:
 
                 currentDatetime = datetime.now()
                 counter += 1
+            break # Temporary for testing
 
+        self.SaveResult(contacts)
+
+        with open("test_text.txt", "w", encoding="utf-8") as text_file:
+            json_string = json.dumps(contacts, indent=4)
+            text_file.write(json_string) 
+        
         return contacts
+
+
+    def MailchimpTest(self):
+        try:
+            client = MailchimpMarketing.Client()
+            client.set_config({
+                "api_key": self.MC_KEY,
+                "server": self.MC_SERVER
+            })
+            response = client.ping.get()
+            print("Connected to MC.", response)
+
+            allLists = client.lists.get_all_lists()["lists"]
+
+            collection = []
+            listID = 0
+
+            for mcList in allLists:
+                if "name" in mcList:
+                    if mcList["name"] == "Academy Subscribers":
+                        listID = mcList["id"]
+
+            collection = client.lists.get_list_members_info(listID, offset=1)
+            print(len(collection))
+
+            self.SaveResult(collection)
+
+
+
+        except ApiClientError as error:
+            print(error)
 
 
     def UploadContacts(self):
@@ -80,6 +124,19 @@ class ApiHandler:
         * This will make a post request to update the contacts in Mailchimp 
         ''' 
         pass
+
+
+    def SaveResult(self, collection = []) -> str:
+        '''
+        * Saves the collection passed in into a readable format in the
+        * specified text file. This is used to take terminal output and
+        * make it more readable. 
+        '''
+        with open("test_text.txt", "w", encoding="utf-8") as text_file:
+            json_string = json.dumps(collection, indent=4)
+            text_file.write(json_string)
+
+        return json_string
 
 
     def TestRequest(self):
