@@ -11,11 +11,12 @@ from dotenv import load_dotenv
 class ApiHandler:
     def __init__(self):
         load_dotenv()
+
+        self.MC_KEY      = os.getenv("MC_KEY")
+        self.MC_SERVER   = os.getenv("MC_SERVER") 
+        self.XCD_KEY     = os.getenv("XCD_KEY")
         self.LastUpdated = "31-12-2024"
-        self.XCD_KEY = os.getenv("XCD_KEY")
-        self.XCD_URL = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&last_updated={self.LastUpdated}" 
-        self.MC_KEY = os.getenv("MC_KEY")
-        self.MC_SERVER = os.getenv("MC_SERVER") 
+        self.XCD_URL     = f"https://api.xcdsystem.com/v2/SeeContacts?apikey={self.XCD_KEY}&last_updated={self.LastUpdated}" 
         
         print("API Handler built.")
 
@@ -108,7 +109,8 @@ class ApiHandler:
                     if mcList["name"] == "Academy Subscribers":
                         listID = mcList["id"]
 
-            collection = client.lists.get_list_members_info(listID, offset=1)
+            # collection = client.lists.get_list_members_info(listID, offset=1)
+            client.lists.batch_list_members()
             print(len(collection))
 
             self.SaveResult(collection)
@@ -123,8 +125,14 @@ class ApiHandler:
         '''
         * This will make a post request to update the contacts in Mailchimp 
         ''' 
-        pass
-
+        try:
+            client = MailchimpMarketing.Client()
+            client.set_config({
+                "api_key": self.MC_KEY,
+                "server": self.MC_SERVER
+            })
+        except ApiClientError as error:
+            print(error)
 
     def SaveResult(self, collection = []) -> str:
         '''
