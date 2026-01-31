@@ -134,6 +134,7 @@ class ApiHandler:
         except ApiClientError as error:
             print(error)
 
+
     def SaveResult(self, collection = []) -> str:
         '''
         * Saves the collection passed in into a readable format in the

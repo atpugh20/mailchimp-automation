@@ -2,7 +2,18 @@ import requests
 
 class DataContainer:
     def __init__(self):
-        pass
+        self.contacts = []
 
-    def AddUser():
+    def AddUser(self, firstName: str, lastName: str, email: str, xcdID: str) -> None:
+        user = {
+            "firstName": firstName,
+            "lastName": lastName,
+            "email": email,
+            "xcdID": xcdID
+        }
+
+        self.contacts.append(user)
+
+
+    def AddMultipleUsers(self, users: list) -> None:
         pass

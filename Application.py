@@ -5,6 +5,7 @@ class Application:
         self.apiHander = ApiHandler()
         print("Application built.")
 
+
     def Run(self):
-        # self.apiHander.ExtractContacts(showStats=True)
-        self.apiHander.MailchimpTest()
+        self.apiHander.ExtractContacts(showStats=True)
+        # self.apiHander.MailchimpTest()
