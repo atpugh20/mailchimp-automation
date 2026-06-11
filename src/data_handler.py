@@ -1,3 +1,7 @@
+def initialize_contacts(contacts_meta: list) -> list:
+    return []
+
+
 def get_email_pref(contact) -> bool:
     """
     Using a given contact, extract the email preference as a bool

@@ -52,7 +52,7 @@ def pull_api(url: str):
     return response_json
 
 
-def get_contacts(last_updated: str) -> list:
+def get_contact_uuids(last_updated: str, testing=False) -> list:
     """
     Fetch all contacts updated since the given date
     and return the parsed response.
@@ -66,26 +66,31 @@ def get_contacts(last_updated: str) -> list:
     next_page = response["next_page"]
 
     # First page data
-    contact_count = response["contacts_found"]
     contacts.extend(response["contact_array"])
     contacts_per_page = len(contacts)
+    contact_count = response["contacts_found"] if not testing else contacts_per_page
+
+    if contacts_per_page == 0:
+        raise APIResponseError(f"Zero contacts returned in response: {response}")
+
     page_count = math.ceil(contact_count / contacts_per_page) - 1
 
     # Follow up pages
-    for i in range(page_count):
-        print(f"Page {i + 1}/{page_count}")
+    if not testing:
+        for i in range(page_count):
+            print(f"Page {i + 1}/{page_count}")
 
-        new_url = f"{SEE_CONTACTS}&searchid={search_id}&pageid={next_page}"
-        response = pull_api(new_url)[0]
+            new_url = f"{SEE_CONTACTS}&searchid={search_id}&pageid={next_page}"
+            response = pull_api(new_url)[0]
 
-        contacts.extend(response["contact_array"])
-        next_page = response["next_page"]
+            contacts.extend(response["contact_array"])
+            next_page = response["next_page"]
 
     # Check that the correct number of contacts were extracted
     if contact_count != len(contacts):
         print(f"Incorrect amount of contacts: {len(contacts)}/{contact_count}")
 
-    return contacts
+    return [c["UUID"] for c in contacts]
 
 
 def get_user_info(contact_id: str):
