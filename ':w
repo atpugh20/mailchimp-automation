@@ -59,31 +59,17 @@ def get_contacts(last_updated: str) -> list:
     """
     url = f"{SEE_CONTACTS}&last_updated={last_updated}"
     response = pull_api(url)[0]
+
     contacts = []
 
-    # Search info
-    search_id = response["searchID"]
     next_page = response["next_page"]
-
-    # First page data
+    search_id = response["searchID"]
     contact_count = response["contacts_found"]
     contacts.extend(response["contact_array"])
     contacts_per_page = len(contacts)
-    page_count = math.ceil(contact_count / contacts_per_page) - 1
+    page_count = contact_count / contacts_per_page
 
-    # Follow up pages
-    for i in range(page_count):
-        print(f"Page {i + 1}/{page_count}")
-
-        new_url = f"{SEE_CONTACTS}&searchid={search_id}&pageid={next_page}"
-        response = pull_api(new_url)[0]
-
-        contacts.extend(response["contact_array"])
-        next_page = response["next_page"]
-
-    # Check that the correct number of contacts were extracted
-    if contact_count != len(contacts):
-        print(f"Incorrect amount of contacts: {len(contacts)}/{contact_count}")
+    print(contact_count)
 
     return contacts
 
