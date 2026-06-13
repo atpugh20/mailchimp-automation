@@ -9,6 +9,8 @@ PREFIX = "https://api.xcdsystem.com/v2"
 SEE_CONTACTS = f"{PREFIX}/SeeContacts?apikey={config.XCD_KEY}"
 GET_USER_INFO = f"{PREFIX}/GetUserInfo?apikey={config.XCD_KEY}"
 
+session = requests.Session()
+
 
 def pull_api(url: str):
     """
@@ -22,7 +24,7 @@ def pull_api(url: str):
 
     # Ensure there is a response
     try:
-        response = requests.get(url)
+        response = session.get(url)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise APIConnectionError(f"Failed to connect to {url}: {e}") from e
