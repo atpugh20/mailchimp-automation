@@ -21,10 +21,6 @@ def get_email_pref(contact) -> bool:
     if email_pref:
         if email_pref["optindate"]:
             is_opted_in = True
-        elif email_pref["optoutdate"]:
-            print("Opted Out")
-        else:
-            print("Not able to determine Email preference")
     else:
         print("Incorrect path to `email_pref`")
 
@@ -206,3 +202,14 @@ def get_membership(groups: list) -> str:
         print("More than one group found")
 
     return active_groups[0]
+
+
+def remove_fake_emails(contacts: dict) -> dict:
+    new_contacts = {}
+    for uuid, data in contacts.items():
+        email = data["email"]
+
+        if "fake" not in email:
+            new_contacts[uuid] = data
+
+    return new_contacts
