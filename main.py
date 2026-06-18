@@ -26,9 +26,12 @@ def start_interval(sync_interval):
 
 def main():
     sync_interval = 30  # seconds
+    update_all = False
 
     while True:
-        last_updated = "06-18-2026"  # MM-DD-YYYY
+        last_updated = "12-30-2000" if update_all else "06-18-2026"  # MM-DD-YYYY
+
+        print(last_updated)
 
         # Time / Memory Tracking
         start_time = time.perf_counter()
