@@ -34,14 +34,19 @@ def main():
         counter += 1
         print(f"\rContacts: {counter}/{len(uuids)}", end="", flush=True)
         contacts.append(get_user_info(uuid))
-    print()
+
+    with open("./test_data/test_data_large.json", "w") as f:
+        contacts_string = json.dump(contacts)
+        f.write(contacts_string)
 
     statuses = get_all_email_pref(contacts)
     contacts, uuids = remove_opt_outs(contacts, statuses, uuids)
     contacts = extract_important_fields(contacts, uuids)
     contacts = remove_fake_emails(contacts)
 
-    print(len(contacts))
+    with open("./test_data/test_data_modified.json", "w") as f:
+        contacts_string = json.dump(contacts)
+        f.write(contacts_string)
 
     current, peak = tracemalloc.get_traced_memory()
 
