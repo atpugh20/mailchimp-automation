@@ -31,13 +31,12 @@ def main():
     while True:
         last_updated = "12-30-2000" if update_all else "06-18-2026"  # MM-DD-YYYY
 
-        print(last_updated)
-
         # Time / Memory Tracking
         start_time = time.perf_counter()
         tracemalloc.start()
 
         # Get Contacts
+        print(f"Checking updates since: {last_updated}")
         print("Creating [search_id]...")
         uuids = get_contact_uuids(last_updated)
         contacts = get_all_user_info(uuids)
