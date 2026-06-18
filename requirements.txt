@@ -1,6 +1,9 @@
-# Config
-python-dotenv == 1.1.1
-
-# API
-requests >= 2.32.5
-mailchimp_marketing == 3.0.80
+certifi==2025.8.3
+charset-normalizer==3.4.3
+idna==3.10
+mailchimp_marketing @ git+https://github.com/mailchimp/mailchimp-marketing-python.git@3305fa45b3f436767a539c5fba9cb2b0a083d761
+python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
+requests==2.32.5
+six==1.17.0
+urllib3==2.5.0
