@@ -19,10 +19,13 @@ def get_email_pref(contact) -> bool:
     )
 
     if email_pref:
+        # If there is an "optindate" filled, then they are subscribed
         if email_pref["optindate"]:
             is_opted_in = True
     else:
+        # Do not unsubscribe unless it is specifically stated in a future pull
         print("Incorrect path to `email_pref`")
+        is_opted_in = True
 
     return is_opted_in
 

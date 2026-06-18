@@ -6,6 +6,7 @@ import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 import hashlib
 
+from src.data_handler import get_email_pref, get_field
 from src import config
 from src.exceptions import APIConnectionError, APIResponseError
 
@@ -129,6 +130,26 @@ def get_user_info(contact_id: str):
     url = f"{GET_USER_INFO}&contactid={contact_id}"
     response = pull_api(url)
     return response
+
+
+def get_all_user_info(uuids: list):
+    contacts = []
+    counter = 0
+    total = len(uuids)
+
+    for uuid in uuids:
+        counter += 1
+        print(f"\rContacts: {counter}/{total}", end="", flush=True)
+        contact = get_user_info(uuid)
+
+        # Skip Opt-outs
+        if not get_email_pref(contact):
+            continue
+
+        # Skip emails with "Fake"
+        email = get_field(contact[0]["contact_info"], "Email")
+        if "fake" in email:
+            continue
 
 
 def push_to_mailchimp(contacts: dict) -> None:
