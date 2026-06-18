@@ -2,18 +2,13 @@ import json
 import time
 import tracemalloc
 
-from src.api_handler import get_all_user_info, get_contact_uuids, get_user_info
-from src.data_handler import (
-    get_all_email_pref,
-    remove_fake_emails,
-    remove_opt_outs,
-    extract_important_fields,
-)
+from src.api_handler import get_all_user_info, get_contact_uuids
 
 
-from test_data import test_contacts, test_uuids
-
-# from test_data import test_contacts
+def log_time(start_time):
+    end_time = time.perf_counter()
+    execution_time = end_time - start_time
+    print(f"Program ran for: {execution_time:.6f} seconds")
 
 
 def log_memory(tracer: tracemalloc):
@@ -23,29 +18,33 @@ def log_memory(tracer: tracemalloc):
     print(f"Peak RAM usage:    {peak / BYTES_PER_MB:.2f} MB")
 
 
+def start_interval(sync_interval):
+    print(f"Waiting for {sync_interval} seconds...")
+    print("======================================")
+    time.sleep(sync_interval)
+
+
 def main():
-    # Time / Memory Tracking
-    start_time = time.perf_counter()
-    tracemalloc.start()
+    sync_interval = 30  # seconds
 
-    # Date format: MM-DD-YYYY
-    last_updated = "06-18-2026"
+    while True:
+        last_updated = "06-18-2026"  # MM-DD-YYYY
 
-    log_memory(tracemalloc)
+        # Time / Memory Tracking
+        start_time = time.perf_counter()
+        tracemalloc.start()
 
-    print("Creating [search_id]...")
-    uuids = get_contact_uuids(last_updated)
-    log_memory(tracemalloc)
+        # Get Contacts
+        print("Creating [search_id]...")
+        uuids = get_contact_uuids(last_updated)
+        contacts = get_all_user_info(uuids)
 
-    get_all_user_info(uuids)
+        # Time / Memory Logging
+        log_time(start_time)
+        log_memory(tracemalloc)
+        tracemalloc.stop()
 
-    # Time Logging
-    end_time = time.perf_counter()
-    execution_time = end_time - start_time
-    print(f"Program ran for: {execution_time:.6f} seconds")
-    # Memory Logging
-    log_memory(tracemalloc)
-    tracemalloc.stop()
+        start_interval(sync_interval)
 
 
 if __name__ == "__main__":

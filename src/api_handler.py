@@ -6,7 +6,7 @@ import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 import hashlib
 
-from src.data_handler import get_email_pref, get_field
+from src.data_handler import extract_important_fields, get_email_pref, get_field
 from src import config
 from src.exceptions import APIConnectionError, APIResponseError
 
@@ -112,9 +112,9 @@ def get_contact_uuids(last_updated: str, testing=False) -> list:
                 contacts.extend(response.get("contact_array", []))
                 next_page = response.get("next_page", "")
             else:
-                print()
                 break
-        print()
+        print()  # skip a line to counter the \r
+
     # Check that the correct number of contacts were extracted
     if contact_count != len(contacts):
         print(f"Incorrect amount of contacts: {len(contacts)}/{contact_count}")
@@ -133,7 +133,7 @@ def get_user_info(contact_id: str):
 
 
 def get_all_user_info(uuids: list):
-    contacts = []
+    contacts = {}
     counter = 0
     total = len(uuids)
 
@@ -150,6 +150,11 @@ def get_all_user_info(uuids: list):
         email = get_field(contact[0]["contact_info"], "Email")
         if "fake" in email:
             continue
+
+        contacts[uuid] = extract_important_fields(contact, uuid)
+
+    print()  # skip a line to counter the \r
+    return contacts
 
 
 def push_to_mailchimp(contacts: dict) -> None:
