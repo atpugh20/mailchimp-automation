@@ -37,25 +37,24 @@ def get_all_email_pref(all_contacts: list) -> list:
 def extract_important_fields(contact, uuid) -> dict:
 
     label_map = {
-        "Email": "email",
-        "Firstname": "first_name",
-        "Lastname": "last_name",
-        "ContactDegrees": "degrees",
-        "Country": "country",
-        "City": "city",
-        "State": "state",
-        "Company": "institution",
-        "CustomField_54": "primary_subspecialty",
+        "Firstname": "FNAME",
+        "Lastname": "LNAME",
+        "ContactDegrees": "DEGREES",
+        "Country": "COUNTRY",
+        "City": "CITY",
+        "State": "STATE",
+        "Company": "INST",
+        "CustomField_54": "SUBSPECIAL",
     }
 
     contact = contact[0]
 
-    new_contact = {"uuid": uuid}
+    new_contact = {"XCDID": uuid}
 
     for key, value in label_map.items():
         new_contact[value] = get_field(contact["contact_info"], key)
 
-    new_contact["membership_type"] = get_membership(contact["contact_groups"])
+    new_contact["MTYPE"] = get_membership(contact["contact_groups"])
 
     return new_contact
 

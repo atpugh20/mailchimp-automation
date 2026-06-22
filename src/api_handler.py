@@ -6,8 +6,9 @@ import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 import hashlib
 
-from src.data_handler import extract_important_fields, get_email_pref, get_field
 from src import config
+from src.data_handler import extract_important_fields, get_email_pref, get_field
+from src.file_handler import load_file, save_email_map
 from src.exceptions import APIConnectionError, APIResponseError
 
 PREFIX = "https://api.xcdsystem.com/v2"
@@ -151,14 +152,72 @@ def get_all_user_info(uuids: list):
         if "fake" in email:
             continue
 
-        contacts[uuid] = extract_important_fields(contact, uuid)
+        contacts[uuid] = {
+            "email_address": email,
+            "status_if_new": "subscribed",
+            "merge_fields": extract_important_fields(contact, uuid),
+        }
 
     print()  # skip a line to counter the \r
     return contacts
 
 
+def get_mc_contacts():
+    offset = 0
+    page_size = 1000
+
+    client = MailchimpMarketing.Client()
+    client.set_config({"api_key": config.MC_KEY, "server": config.MC_SERVER})
+    list_id = config.MC_MAIN_LIST_ID
+
+    try:
+        response = client.lists.get_list_members_info(
+            list_id, fields=["members"], count=page_size, offset=offset
+        )
+        print(response)
+    except ApiClientError as e:
+        print(f"Status: {e.status_code}")
+        print(e.text)
+
+
+def update_mc_email(new_email: str, old_email: str, list_id: str):
+    pass
+
+
+def update_mc_emails(list_id: str, contacts: dict):
+    email_map = load_file(f"./data/email-map-{list_id}.json")
+
+
 def push_to_mailchimp(contacts: dict) -> None:
     client = MailchimpMarketing.Client()
     client.set_config({"api_key": config.MC_KEY, "server": config.MC_SERVER})
+    list_id = config.MC_TEST_LIST_ID
 
-    import_list = []
+    response = client.ping.get()
+
+    members = []
+
+    for uuid, contact in contacts.items():
+        if not contact.get("email_address"):
+            continue
+
+        members.append(contact)
+
+    chunk_size = 500
+
+    for i in range(0, len(members), chunk_size):
+        chunk = members[i : i + chunk_size]
+
+        try:
+            response = client.lists.batch_list_members(
+                list_id, {"members": chunk, "update_existing": True}
+            )
+            print(
+                f"Batch {i // chunk_size + 1}: "
+                f"{response['updated_members']} updated, "
+                f"{response['new_members']} new, "
+                f"{response['error_count']} errors"
+            )
+
+        except ApiClientError as e:
+            print(f"Mailchimp error on batch {i // chunk_size + 1}: {e.text}")
