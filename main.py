@@ -73,11 +73,13 @@ mc_test_data = {
 def main():
     sync_interval = 30  # seconds
 
+    testing = False
+
     last_manual = False
     new_email_cache = False
 
-    # list_id = config.MC_MAIN_LIST_ID
-    list_id = config.MC_TEST_LIST_ID
+    list_id = config.MC_MAIN_LIST_ID
+    # list_id = config.MC_TEST_LIST_ID
 
     while True:
         # Time / Memory Tracking
@@ -97,7 +99,7 @@ def main():
         # Get XCD contacts
         print(f"Checking updates since: {date}")
         print("Creating [search_id]...")
-        uuids = get_contact_uuids(date)
+        uuids = get_contact_uuids(date, testing)
         contacts = get_all_user_info(uuids)
 
         # Use this when using test data
