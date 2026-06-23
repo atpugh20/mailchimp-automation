@@ -17,8 +17,10 @@ Example Email Map Data:
 
 import json
 
+dates_file_path = "./data/dates.json"
 
-def load_file(file_path: str, default_data):
+
+def load_file(file_path: str, default_data={}):
     try:
         with open(file_path, "r") as f:
             return json.load(f)
@@ -52,8 +54,9 @@ def load_dates() -> dict:
 
 
 def save_email_map(data: dict, list_id: str):
-    map = {}
+    path = f"./cache/email-map-{list_id}.json"
+    email_cache = load_file(path)
     for uuid, contact in data.items():
-        map[uuid] = contact["email_address"]
+        email_cache[uuid] = contact["email_address"]
 
-    save_file(map, f"./data/email-map-{list_id}.json")
+    save_file(email_cache, path)

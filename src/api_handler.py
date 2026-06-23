@@ -17,6 +17,8 @@ SEE_CONTACTS = f"{PREFIX}/SeeContacts?apikey={config.XCD_KEY}"
 GET_USER_INFO = f"{PREFIX}/GetUserInfo?apikey={config.XCD_KEY}"
 
 session = requests.Session()
+client = MailchimpMarketing.Client()
+client.set_config({"api_key": config.MC_KEY, "server": config.MC_SERVER})
 
 
 def pull_api(url: str) -> list | dict:
@@ -162,13 +164,9 @@ def get_all_user_info(uuids: list):
     return contacts
 
 
-def get_mc_contacts():
+def get_mc_contacts(client, list_id):
     offset = 0
     page_size = 1000
-
-    client = MailchimpMarketing.Client()
-    client.set_config({"api_key": config.MC_KEY, "server": config.MC_SERVER})
-    list_id = config.MC_MAIN_LIST_ID
 
     try:
         response = client.lists.get_list_members_info(
@@ -180,19 +178,42 @@ def get_mc_contacts():
         print(e.text)
 
 
-def update_mc_email(new_email: str, old_email: str, list_id: str):
-    pass
+def update_mc_email(new_email: str, old_email: str, list_id: str) -> bool:
+    try:
+        subscriber_hash = hashlib.md5(old_email.lower().encode()).hexdigest()
+        client.lists.set_list_member(
+            list_id,
+            subscriber_hash,
+            {"email_address": new_email, "status_if_new": "subscribed"},
+        )
+        return True
+
+    except ApiClientError as e:
+        print(
+            f"Error changing email. Check for duplicate. Old: {old_email}, New: {new_email}, Error: {e}"
+        )
+        return False
 
 
-def update_mc_emails(list_id: str, contacts: dict):
-    email_map = load_file(f"./data/email-map-{list_id}.json")
+def update_mc_emails(contacts: dict, list_id: str):
+    email_cache = load_file(f"./cache/email-map-{list_id}.json")
+
+    for uuid, contact in contacts.items():
+        new_email = contact["email_address"]
+        old_email = email_cache.get(uuid, new_email)
+
+        if old_email == new_email:
+            continue
+
+        if update_mc_email(new_email, old_email, list_id):
+            email_cache[uuid] = new_email
+        else:
+            contact["email_address"] = old_email
+
+    save_email_map(contacts, list_id)
 
 
-def push_to_mailchimp(contacts: dict) -> None:
-    client = MailchimpMarketing.Client()
-    client.set_config({"api_key": config.MC_KEY, "server": config.MC_SERVER})
-    list_id = config.MC_TEST_LIST_ID
-
+def push_to_mailchimp(contacts: dict, list_id: str) -> None:
     response = client.ping.get()
 
     members = []
