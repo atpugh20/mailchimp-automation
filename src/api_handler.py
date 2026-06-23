@@ -8,7 +8,7 @@ import hashlib
 
 from src import config
 from src.data_handler import extract_important_fields, get_email_pref, get_field
-from src.file_handler import load_file, save_email_map
+from src.file_handler import load_file, save_email_map, save_file
 from src.exceptions import APIConnectionError, APIResponseError
 
 PREFIX = "https://api.xcdsystem.com/v2"
@@ -30,12 +30,12 @@ def pull_api(url: str) -> list | dict:
         APIResponseError:   Invalid or unexpected JSON responses.
     """
     max_fails = 10
-    wait_time = 15
+    wait_time = 5
 
     for i in range(max_fails):
         if i > 0:
             print(f"Waiting {wait_time} seconds...")
-            time.sleep(15)
+            time.sleep(wait_time)
             print("Trying again")
 
         # Ensure there is a response
@@ -164,21 +164,11 @@ def get_all_user_info(uuids: list):
     return contacts
 
 
-def get_mc_contacts(client, list_id):
-    offset = 0
-    page_size = 1000
-
-    try:
-        response = client.lists.get_list_members_info(
-            list_id, fields=["members"], count=page_size, offset=offset
-        )
-        print(response)
-    except ApiClientError as e:
-        print(f"Status: {e.status_code}")
-        print(e.text)
-
-
 def update_mc_email(new_email: str, old_email: str, list_id: str) -> bool:
+    """
+    Update the email address for an individual contact in mailchimp. If it
+    succeeds, it returns True. If it fails, it returns false.
+    """
     try:
         subscriber_hash = hashlib.md5(old_email.lower().encode()).hexdigest()
         client.lists.set_list_member(
@@ -196,6 +186,9 @@ def update_mc_email(new_email: str, old_email: str, list_id: str) -> bool:
 
 
 def update_mc_emails(contacts: dict, list_id: str):
+    """
+    Updates all the changed emails for
+    """
     email_cache = load_file(f"./cache/email-map-{list_id}.json")
 
     for uuid, contact in contacts.items():
@@ -235,10 +228,46 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
             )
             print(
                 f"Batch {i // chunk_size + 1}: "
-                f"{response['updated_members']} updated, "
-                f"{response['new_members']} new, "
+                f"{len(response['updated_members'])} updated, "
+                f"{len(response['new_members'])} new, "
                 f"{response['error_count']} errors"
             )
 
         except ApiClientError as e:
             print(f"Mailchimp error on batch {i // chunk_size + 1}: {e.text}")
+
+
+def pull_new_email_cache(list_id: str) -> None:
+    offset = 0
+    page_size = 1000
+    email_map = {}
+
+    try:
+        print("Pulling new email cache from mailchimp.")
+        while True:
+            response = client.lists.get_list_members_info(
+                list_id,
+                fields=["members.email_address", "members.merge_fields"],
+                count=page_size,
+                offset=offset,
+            )
+
+            batch = response["members"]
+
+            if not batch:
+                break
+
+            for member in batch:
+                email = member["email_address"]
+                uuid = member["merge_fields"]["XCDID"]
+                email_map[uuid] = email
+
+            offset += page_size
+            print(f"\r{len(email_map)} emails pulled.", end="", flush=True)
+        print()
+        path = f"./cache/email-map-{list_id}.json"
+        save_file(email_map, path)
+
+    except ApiClientError as e:
+        print(f"Status: {e.status_code}")
+        print(e.text)

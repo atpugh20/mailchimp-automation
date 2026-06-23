@@ -9,7 +9,7 @@ from src.file_handler import load_dates, save_file, dates_file_path
 from src.api_handler import (
     get_all_user_info,
     get_contact_uuids,
-    get_mc_contacts,
+    pull_new_email_cache,
     push_to_mailchimp,
     update_mc_emails,
 )
@@ -21,7 +21,7 @@ def log_time(start_time):
     print(f"Program ran for: {execution_time:.6f} seconds")
 
 
-def log_memory(tracer: tracemalloc):
+def log_memory():
     BYTES_PER_MB = 1024 * 1024
     current, peak = tracemalloc.get_traced_memory()
     print(f"Current RAM usage: {current / BYTES_PER_MB:.2f} MB")
@@ -72,8 +72,11 @@ mc_test_data = {
 
 def main():
     sync_interval = 30  # seconds
-    update_all = False
 
+    last_manual = False
+    new_email_cache = False
+
+    # list_id = config.MC_MAIN_LIST_ID
     list_id = config.MC_TEST_LIST_ID
 
     while True:
@@ -83,17 +86,22 @@ def main():
 
         # Get date for XCD Pull
         dates = load_dates()
-        if update_all:
+        if last_manual:
             date = dates["last_manual"]
         else:
             date = dates["last_update"]
 
+        if new_email_cache:
+            pull_new_email_cache(list_id)
+
         # Get XCD contacts
-        """print(f"Checking updates since: {date}")
+        print(f"Checking updates since: {date}")
         print("Creating [search_id]...")
-        uuids = get_contact_uuids(date, testing)
-        contacts = get_all_user_info(uuids)"""
-        contacts = copy.deepcopy(mc_test_data)
+        uuids = get_contact_uuids(date)
+        contacts = get_all_user_info(uuids)
+
+        # Use this when using test data
+        # contacts = copy.deepcopy(mc_test_data)
 
         # Update emails in MC
         update_mc_emails(contacts, list_id)
@@ -103,15 +111,18 @@ def main():
 
         # Save current date as last_update
         dates["last_update"] = dt.now().strftime("%m-%d-%Y")
+        if last_manual:
+            dates["last_manual"] = dates["last_update"]
+
         save_file(dates, dates_file_path)
 
         # Time / Memory Logging
         log_time(start_time)
-        log_memory(tracemalloc)
+        log_memory()
         tracemalloc.stop()
 
         # Wait for next loop
-        start_interval(sync_interval)
+        # start_interval(sync_interval)
 
 
 if __name__ == "__main__":
