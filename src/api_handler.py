@@ -179,9 +179,8 @@ def update_mc_email(new_email: str, old_email: str, list_id: str) -> bool:
         return True
 
     except ApiClientError as e:
-        print(
-            f"Error changing email. Check for duplicate. Old: {old_email}, New: {new_email}, Error: {e}"
-        )
+        print(f"Error changing email. Old: {old_email} New: {new_email}")
+        print(f"Error :: {e.status_code} :: {e.text}") 
         return False
 
 

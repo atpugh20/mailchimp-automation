@@ -15,10 +15,11 @@ from src.api_handler import (
 )
 
 
-def log_time(start_time):
+def log_time(start_time) -> float:
     end_time = time.perf_counter()
     execution_time = end_time - start_time
     print(f"Program ran for: {execution_time:.6f} seconds")
+    return execution_time
 
 
 def log_memory():
@@ -33,8 +34,8 @@ def start_interval(sync_interval):
     print("======================================")
     time.sleep(sync_interval)
 
-
-mc_test_data = {
+# Use when testing small data
+"""mc_test_data = {
     "D4ED5672-05E2-0F11-6CC69A30C6D6A75F": {
         "email_address": "alex@uscap.org",
         "status_if_new": "subscribed",
@@ -67,14 +68,11 @@ mc_test_data = {
             "MTYPE": "",
         },
     },
-}
+}"""
 
 
 def main():
-    sync_interval = 30  # seconds
-
     testing = False
-
     last_manual = False
     new_email_cache = False
 
@@ -82,6 +80,8 @@ def main():
     # list_id = config.MC_TEST_LIST_ID
 
     while True:
+        sync_interval = 30  # seconds
+
         # Time / Memory Tracking
         start_time = time.perf_counter()
         tracemalloc.start()
@@ -95,6 +95,7 @@ def main():
 
         if new_email_cache:
             pull_new_email_cache(list_id)
+            new_email_cache = False
 
         # Get XCD contacts
         print(f"Checking updates since: {date}")
@@ -119,12 +120,13 @@ def main():
         save_file(dates, dates_file_path)
 
         # Time / Memory Logging
-        log_time(start_time)
+        time_passed = log_time(start_time)
         log_memory()
         tracemalloc.stop()
 
         # Wait for next loop
-        # start_interval(sync_interval)
+        if time_passed < sync_interval:
+            start_interval(int(sync_interval - time_passed))
 
 
 if __name__ == "__main__":
