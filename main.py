@@ -34,6 +34,7 @@ def start_interval(sync_interval):
     print("======================================")
     time.sleep(sync_interval)
 
+
 # Use when testing small data
 """mc_test_data = {
     "D4ED5672-05E2-0F11-6CC69A30C6D6A75F": {

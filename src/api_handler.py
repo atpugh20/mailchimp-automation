@@ -1,6 +1,7 @@
 import requests
 import math
 import time
+import json
 
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
@@ -179,8 +180,18 @@ def update_mc_email(new_email: str, old_email: str, list_id: str) -> bool:
         return True
 
     except ApiClientError as e:
-        print(f"Error changing email. Old: {old_email} New: {new_email}")
-        print(f"Error :: {e.status_code} :: {e.text}") 
+        e_map = json.loads(e.text)
+        title = e_map.get("title")
+
+        if title == "Member Exists":
+            print(f"{new_email} already in MC")
+            return True
+        elif title == "Invalid Resource":
+            print(f"{new_email} has been deleted from mailchimp before.")
+        else:
+            print(f"Error :: {e.text}")
+            print(f"Error changing email. Old: {old_email} New: {new_email}")
+
         return False
 
 
@@ -217,6 +228,7 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
         members.append(contact)
 
     chunk_size = 500
+    last_response = {}
 
     for i in range(0, len(members), chunk_size):
         chunk = members[i : i + chunk_size]
@@ -225,6 +237,7 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
             response = client.lists.batch_list_members(
                 list_id, {"members": chunk, "update_existing": True}
             )
+            last_response = response
             print(
                 f"Batch {i // chunk_size + 1}: "
                 f"{len(response['updated_members'])} updated, "
@@ -234,6 +247,8 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
 
         except ApiClientError as e:
             print(f"Mailchimp error on batch {i // chunk_size + 1}: {e.text}")
+
+    print(last_response)
 
 
 def pull_new_email_cache(list_id: str) -> None:
