@@ -245,10 +245,14 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
                 f"{response['error_count']} errors"
             )
 
+            if response["error_count"] > 0:
+                print("Errors found")
+                print(response["errors"])
+
         except ApiClientError as e:
             print(f"Mailchimp error on batch {i // chunk_size + 1}: {e.text}")
 
-    print(last_response)
+    # print(last_response)
 
 
 def pull_new_email_cache(list_id: str) -> None:
