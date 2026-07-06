@@ -47,6 +47,8 @@ def extract_important_fields(contact, uuid) -> dict:
         "CustomField_54": "SUBSPECIAL",
     }
 
+    state_countries = ["United States", "US", "Canada", "CA"]
+
     contact = contact[0]
 
     new_contact = {"XCDID": uuid}
@@ -112,3 +114,15 @@ def get_membership(groups: list) -> str:
         print("More than one group found")
 
     return active_groups[0]
+
+
+def fix_invalid_address(chunk: list, errors: list) -> list:
+    new_chunk = []
+
+    for e in errors:
+        member = next(m for m in chunk if m["email_address"] == e["email_address"])
+        del member["merge_fields"]["STATE"]
+        del member["merge_fields"]["CITY"]
+        new_chunk.append(member)
+
+    return new_chunk

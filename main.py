@@ -102,23 +102,27 @@ def main():
         print(f"Checking updates since: {date}")
         print("Creating [search_id]...")
         uuids = get_contact_uuids(date, testing)
-        contacts = get_all_user_info(uuids)
+        if len(uuids) > 0:
+            contacts = get_all_user_info(uuids)
 
-        # Use this when using test data
-        # contacts = copy.deepcopy(mc_test_data)
+            if len(contacts) > 0:
 
-        # Update emails in MC
-        update_mc_emails(contacts, list_id)
+                # Update emails in MC
+                update_mc_emails(contacts, list_id)
 
-        # Update rest of data
-        push_to_mailchimp(contacts, list_id)
+                # Update rest of data
+                push_to_mailchimp(contacts, list_id)
 
-        # Save current date as last_update
-        dates["last_update"] = dt.now().strftime("%m-%d-%Y")
-        if last_manual:
-            dates["last_manual"] = dates["last_update"]
+                # Save current date as last_update
+                dates["last_update"] = dt.now().strftime("%m-%d-%Y")
+                if last_manual:
+                    dates["last_manual"] = dates["last_update"]
 
-        save_file(dates, dates_file_path)
+                save_file(dates, dates_file_path)
+            else:
+                print("No contacts pulled from UUID's.")
+        else:
+            print("No changes yet.")
 
         # Time / Memory Logging
         time_passed = log_time(start_time)

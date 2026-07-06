@@ -8,7 +8,12 @@ from mailchimp_marketing.api_client import ApiClientError
 import hashlib
 
 from src import config
-from src.data_handler import extract_important_fields, get_email_pref, get_field
+from src.data_handler import (
+    extract_important_fields,
+    get_email_pref,
+    get_field,
+    fix_invalid_address,
+)
 from src.file_handler import load_file, save_email_map, save_file
 from src.exceptions import APIConnectionError, APIResponseError
 
@@ -216,6 +221,28 @@ def update_mc_emails(contacts: dict, list_id: str):
     save_email_map(contacts, list_id)
 
 
+def push_chunk(chunk: list, list_id: str) -> list:
+    try:
+        response = client.lists.batch_list_members(
+            list_id, {"members": chunk, "update_existing": True}
+        )
+
+        print(
+            f"{len(response['updated_members'])} updated, "
+            f"{len(response['new_members'])} new, "
+            f"{response['error_count']} errors"
+        )
+
+        return response.get("errors", [])
+
+    except ApiClientError as e:
+        print(f"Mailchimp error on batch: {e.text}")
+    except Exception as e:
+        print(f"Unknown error in `push_chunk`: {e}")
+
+    return []
+
+
 def push_to_mailchimp(contacts: dict, list_id: str) -> None:
     response = client.ping.get()
 
@@ -228,29 +255,16 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
         members.append(contact)
 
     chunk_size = 500
-    last_response = {}
 
     for i in range(0, len(members), chunk_size):
         chunk = members[i : i + chunk_size]
 
-        try:
-            response = client.lists.batch_list_members(
-                list_id, {"members": chunk, "update_existing": True}
-            )
-            last_response = response
-            print(
-                f"Batch {i // chunk_size + 1}: "
-                f"{len(response['updated_members'])} updated, "
-                f"{len(response['new_members'])} new, "
-                f"{response['error_count']} errors"
-            )
+        errors = push_chunk(chunk, list_id)
 
-            if response["error_count"] > 0:
-                print("Errors found")
-                print(response["errors"])
-
-        except ApiClientError as e:
-            print(f"Mailchimp error on batch {i // chunk_size + 1}: {e.text}")
+        if len(errors) > 0:
+            print("Fixing address fields")
+            new_chunk = fix_invalid_address(chunk, errors)
+            new_errors = push_chunk(new_chunk, list_id)
 
     # print(last_response)
 
