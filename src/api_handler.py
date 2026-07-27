@@ -265,6 +265,7 @@ def push_to_mailchimp(contacts: dict, list_id: str) -> None:
             print("Fixing address fields")
             new_chunk = fix_invalid_address(chunk, errors)
             new_errors = push_chunk(new_chunk, list_id)
+            print(new_errors)
 
     # print(last_response)
 
