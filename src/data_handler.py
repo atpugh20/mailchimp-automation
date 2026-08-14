@@ -121,8 +121,8 @@ def fix_invalid_address(chunk: list, errors: list) -> list:
 
     for e in errors:
         member = next(m for m in chunk if m["email_address"] == e["email_address"])
-        del member["merge_fields"]["STATE"]
-        del member["merge_fields"]["CITY"]
+        member["merge_fields"]["STATE"] = ""
+        member["merge_fields"]["CITY"] = ""
         new_chunk.append(member)
 
     return new_chunk
